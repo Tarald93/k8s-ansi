@@ -1,8 +1,22 @@
 # Vagrant Ansible k8s cluster v1.33
 
+## Requirements:
+- ansible
+- VirtualBox
+- vagrant
+
 ```
 vagrant up
+
+vagrant ssh k8s-master
+
+#Check if everything works
+
+k get nodes -o wide
+
+crictl ps
 ```
+enjoy
 ### If error because of network.
 ```
 echo '* 192.168.50.0/24' >> /etc/vbox/networks.conf
