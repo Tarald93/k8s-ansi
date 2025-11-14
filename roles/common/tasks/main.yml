@@ -76,6 +76,41 @@
     state: started
     enabled: yes
 
+# CRI-O Usergroup etc for non sudo use
+
+- name: Ensure crio group exists
+  group:
+    name: crio
+    system: yes
+
+- name: Add vagrant user to crio group
+  user:
+    name: vagrant
+    groups: crio
+    append: yes
+
+- name: Create systemd override directory for CRI-O
+  file:
+    path: /etc/systemd/system/crio.service.d
+    state: directory
+    mode: '0755'
+
+- name: Configure CRI-O service to use crio group and group-readable socket
+  copy:
+    dest: /etc/systemd/system/crio.service.d/override.conf
+    mode: '0644'
+    content: |
+      [Service]
+      Group=crio
+      UMask=007
+
+- name: Reload systemd and restart CRI-O
+  systemd:
+    daemon_reload: yes
+    name: crio
+    state: restarted
+    enabled: yes
+
 - name: Install Kubernetes packages
   apt:
     name:

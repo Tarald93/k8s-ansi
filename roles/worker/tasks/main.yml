@@ -6,4 +6,5 @@
   register: join_cmd
 
 - name: Join worker node to cluster
-  command: "{{ join_cmd.stdout }} --ignore-preflight-errors=all"
+  command: "{{ join_cmd.stdout }} --cri-socket=unix:///var/run/crio/crio.sock --ignore-preflight-errors=all"
+
