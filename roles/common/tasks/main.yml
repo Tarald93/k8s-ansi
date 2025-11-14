@@ -1,0 +1,113 @@
+---
+- name: Install base packages
+  apt:
+    name:
+      - apt-transport-https
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: yes
+
+- name: Ensure /etc/apt/keyrings exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Download and dearmor Kubernetes apt key
+  shell: |
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key \
+      | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  args:
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kubernetes apt repository
+  copy:
+    dest: /etc/apt/sources.list.d/kubernetes.list
+    content: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.33/deb/ /\n"
+    mode: '0644'
+
+- name: Disable swap
+  command: swapoff -a
+
+- name: Remove swap from fstab
+  replace:
+    path: /etc/fstab
+    regexp: '^.*swap.*$'
+    replace: ''
+
+
+- name: Ensure /etc/apt/keyrings exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+# Make sure this exists once (you may already have it):
+- name: Ensure /etc/apt/keyrings exists
+  file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Add CRI-O apt key (v1.33)
+  shell: |
+    curl -fsSL https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.33/deb/Release.key \
+      | gpg --dearmor -o /etc/apt/keyrings/cri-o-apt-keyring.gpg
+  args:
+    creates: /etc/apt/keyrings/cri-o-apt-keyring.gpg
+
+- name: Add CRI-O apt repository (v1.33)
+  copy:
+    dest: /etc/apt/sources.list.d/cri-o.list
+    content: "deb [signed-by=/etc/apt/keyrings/cri-o-apt-keyring.gpg] https://download.opensuse.org/repositories/isv:/cri-o:/stable:/v1.33/deb/ /\n"
+    mode: '0644'
+
+- name: Install CRI-O runtime
+  apt:
+    name: cri-o
+    state: present
+    update_cache: yes
+
+- name: Enable and start CRI-O
+  systemd:
+    name: crio
+    state: started
+    enabled: yes
+
+- name: Install Kubernetes packages
+  apt:
+    name:
+      - kubelet
+      - kubeadm
+      - kubectl
+    state: present
+    update_cache: yes
+
+- name: Hold Kubernetes packages
+  dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - kubelet
+    - kubeadm
+    - kubectl
+
+
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- name: Set bashrc alias and autocomplete
+  lineinfile:
+    path: /home/vagrant/.bashrc
+    line: "{{ item }}"
+    state: present
+  loop: 
+    - 'alias k=kubectl'
+    - 'export KUBE_EDITOR="nano -cmilET4"'
