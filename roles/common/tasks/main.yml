@@ -44,7 +44,6 @@
     state: directory
     mode: '0755'
 
-# Make sure this exists once (you may already have it):
 - name: Ensure /etc/apt/keyrings exists
   file:
     path: /etc/apt/keyrings
