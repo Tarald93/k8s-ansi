@@ -31,7 +31,41 @@
   delay: 10
   until: kubectl_ready.rc == 0
 
-- name: Install Calico
+# - name: Install Calico
+#   become_user: vagrant
+#   shell: |
+#     kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
+
+# Install Helm
+
+- name: Install Helm (v3) if not present
+  become: yes
+  shell: |
+    curl -fsSL https://get.helm.sh/helm-v3.16.2-linux-amd64.tar.gz -o /tmp/helm.tar.gz
+    tar -C /tmp -zxf /tmp/helm.tar.gz
+    mv /tmp/linux-amd64/helm /usr/local/bin/helm
+    chmod +x /usr/local/bin/helm
+  args:
+    creates: /usr/local/bin/helm
+
+# CILIUM through Helm
+
+- name: Add Cilium Helm repo
   become_user: vagrant
   shell: |
-    kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.27.3/manifests/calico.yaml
+    helm repo add cilium https://helm.cilium.io || true
+    helm repo update
+  environment:
+    KUBECONFIG: /home/vagrant/.kube/config
+
+# 1.18.4 - latest stable
+- name: Install Cilium via Helm
+  become_user: vagrant
+  shell: |
+    helm upgrade --install cilium cilium/cilium \
+      --version 1.18.4 \
+      --namespace kube-system \
+      --create-namespace
+  environment:
+    KUBECONFIG: /home/vagrant/.kube/config
+
