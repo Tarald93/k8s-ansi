@@ -162,3 +162,15 @@
         # editor
         export KUBE_EDITOR="nano -cmilET4"
       fi
+      # helm
+      if command -v helm &> /dev/null; then
+        # helm completion
+        source <(helm completion bash)
+
+        alias h=helm
+      fi
+
+      # crictl
+      if command -v crictl &> /dev/null; then
+        source <(crictl completion)
+      fi
