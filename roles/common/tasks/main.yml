@@ -145,3 +145,4 @@
   loop: 
     - 'alias k=kubectl'
     - 'export KUBE_EDITOR="nano -cmilET4"'
+    - 'source <(kubectl completion bash)'
