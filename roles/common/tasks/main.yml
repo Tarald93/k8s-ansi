@@ -137,9 +137,14 @@
     state: present
     reload: yes
 
+- name: Install bashcompletion
+  apt:
+    name: bash-completion
+    state: present
+    update_cache: yes
+
+
 - name: Enable kubectl alias and bash completion for vagrant
-  become: true
-  become_user: vagrant
   blockinfile:
     path: /home/vagrant/.bashrc
     marker: "# {mark} KUBECTL CONFIG"
@@ -157,4 +162,3 @@
         # editor
         export KUBE_EDITOR="nano -cmilET4"
       fi
-  mode: '0644'
