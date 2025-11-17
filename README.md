@@ -1,4 +1,7 @@
-# Vagrant Ansible k8s cluster v1.33
+# Vagrant Ansible k8s cluster:
+- k8s version 1.33
+- helm v3
+- cilium CNI
 
 ## Requirements:
 - ansible
