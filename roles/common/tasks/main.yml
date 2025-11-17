@@ -137,12 +137,24 @@
     state: present
     reload: yes
 
-- name: Set bashrc alias and autocomplete
-  lineinfile:
+- name: Enable kubectl alias and bash completion for vagrant
+  become: true
+  become_user: vagrant
+  blockinfile:
     path: /home/vagrant/.bashrc
-    line: "{{ item }}"
-    state: present
-  loop: 
-    - 'alias k=kubectl'
-    - 'export KUBE_EDITOR="nano -cmilET4"'
-    - 'source <(kubectl completion bash)'
+    marker: "# {mark} KUBECTL CONFIG"
+    block: |
+      if command -v kubectl &> /dev/null; then
+        # kubectl completion
+        source <(kubectl completion bash)
+
+        # alias
+        alias k=kubectl
+
+        # completion for alias k
+        complete -F __start_kubectl k
+
+        # editor
+        export KUBE_EDITOR="nano -cmilET4"
+      fi
+  mode: '0644'

@@ -1,5 +1,13 @@
+require 'yaml'
+
+vars = YAML.load_file("inventory/group_vars/all.yml")
+
+BASE_NODE_IP = vars["base_node_ip"]
+MASTER_IP = "#{BASE_NODE_IP}.#{vars["master_ip_last"]}"
+WORKER_IPS = vars["worker_ip_last"].map { |n| "#{BASE_NODE_IP}.#{n}" }
+
 IMAGE_NAME = "bento/ubuntu-22.04"
-NODES = 2
+NODES      = WORKER_IPS.length
 
 Vagrant.configure("2") do |config|
   config.ssh.insert_key = false
@@ -13,11 +21,11 @@ Vagrant.configure("2") do |config|
   config.vm.define "k8s-master" do |master|
     master.vm.box = IMAGE_NAME
     master.vm.hostname = "k8s-master"
-    master.vm.network "private_network", ip: "192.168.56.10"
+    master.vm.network "private_network", ip: MASTER_IP
 
     master.vm.provision "ansible" do |ansible|
       ansible.playbook = "playbooks/master.yml"
-      ansible.inventory_path = "inventory/hosts.ini"
+      ansible.inventory_path = "inventory/hosts.yml"
       ansible.compatibility_mode = "2.0"
     end
   end
@@ -27,11 +35,13 @@ Vagrant.configure("2") do |config|
     config.vm.define "k8s-node-#{i}" do |node|
       node.vm.box = IMAGE_NAME
       node.vm.hostname = "k8s-node-#{i}"
-      node.vm.network "private_network", ip: "192.168.56.#{10 + i}"
+      
+      worker_ip = WORKER_IPS[i - 1]
+      node.vm.network "private_network", ip: worker_ip
 
       node.vm.provision "ansible" do |ansible|
         ansible.playbook = "playbooks/worker.yml"
-        ansible.inventory_path = "inventory/hosts.ini"
+        ansible.inventory_path = "inventory/hosts.yml"
         ansible.compatibility_mode = "2.0"
       end
     end

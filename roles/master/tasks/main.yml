@@ -1,8 +1,8 @@
 - name: Initialize control plane
   command: >
     kubeadm init
-    --apiserver-advertise-address=192.168.56.10
-    --pod-network-cidr=192.168.0.0/16
+    --apiserver-advertise-address="{{ ansible_host }}"
+    --pod-network-cidr="{{ pod_cidr }}"
     --cri-socket=unix:///var/run/crio/crio.sock
   args:
     creates: /etc/kubernetes/admin.conf
@@ -41,7 +41,7 @@
 - name: Install Helm (v3) if not present
   become: yes
   shell: |
-    curl -fsSL https://get.helm.sh/helm-v3.16.2-linux-amd64.tar.gz -o /tmp/helm.tar.gz
+    curl -fsSL "{{ helm_link }}" -o /tmp/helm.tar.gz
     tar -C /tmp -zxf /tmp/helm.tar.gz
     mv /tmp/linux-amd64/helm /usr/local/bin/helm
     chmod +x /usr/local/bin/helm
@@ -63,8 +63,9 @@
   become_user: vagrant
   shell: |
     helm upgrade --install cilium cilium/cilium \
-      --version 1.18.4 \
+      --version "{{ cilium_version }}" \
       --namespace kube-system \
+      --cluster-pool-ipv4-cidr "{{ pod_cidr }}" \
       --create-namespace
   environment:
     KUBECONFIG: /home/vagrant/.kube/config

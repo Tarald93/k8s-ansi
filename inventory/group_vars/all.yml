@@ -1,0 +1,22 @@
+# base network for k8s nodes
+base_node_ip: "192.168.56"
+
+# node octets
+master_ip_last: 10
+
+worker_ip_last:
+  - 11
+  - 12
+
+# Pod network base + cidr
+base_pod_network: "192.168.0.0"
+pod_cidr_suffix: "16"
+
+# K8s related vars
+cilium_version: "1.18.4"
+helm_link: "https://get.helm.sh/helm-v3.16.2-linux-amd64.tar.gz"
+
+# ip logic
+master_ip: "{{ base_node_ip }}.{{ master_ip_last }}"
+worker_ips: "{{ worker_ip_last | map('regex_replace', '^(.*)$', base_node_ip ~ '.\\1') | list }}"
+pod_cidr: "{{ base_pod_network }}/{{ pod_cidr_suffix }}"
