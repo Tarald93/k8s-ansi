@@ -58,15 +58,15 @@
   environment:
     KUBECONFIG: /home/vagrant/.kube/config
 
-# 1.18.4 - latest stable
 - name: Install Cilium via Helm
   become_user: vagrant
   shell: |
     helm upgrade --install cilium cilium/cilium \
       --version "{{ cilium_version }}" \
       --namespace kube-system \
-      --cluster-pool-ipv4-cidr "{{ pod_cidr }}" \
-      --create-namespace
+      --create-namespace \
+      --set ipam.mode=cluster-pool \
+      --set ipam.operator.clusterPoolIPv4PodCIDRList="{ {{ pod_cidr }} }"
   environment:
     KUBECONFIG: /home/vagrant/.kube/config
 
